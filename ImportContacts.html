@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+
+  <style type="text/css">
+
+body {
+  font: sans-serif;
+}
+
+.section {
+  margin: 4px;
+}
+
+input, select {
+  margin: 4px;
+}
+
+#output {
+  color: #119900;
+}
+
+.loaded, .loading {
+  padding-right: 30px;
+  background-image: none;
+}
+.loading {
+  background: url('https://lh6.googleusercontent.com/-S87nMBe6KWE/TuB9dR48F0I/AAAAAAAAByQ/0Z96LirzDqg/s27/load.gif') no-repeat 0 right;
+}
+
+  </style>
+
+  </head>
+  <body>
+
+<form id="myForm" onsubmit="handleFormSubmit(this)">
+
+  <div class='section'>
+    <label>Select group to import:
+      <? var groups = gmailGetGroups(); ?>
+      <select name="groups">
+        <? for (var i = 0; i < groups.length; i++) { ?>
+            <option value="<?=groups[i].name ?>"><?= groups[i].name ?></option>
+        <? } ?>
+      </select>
+    </label>
+  </div>
+
+  <p id="output" class='loaded'></p>
+
+  <input type="submit" value="Import" />
+</form>
+
+
+
+
+<script>
+
+  // Prevent forms from submitting.
+  function preventFormSubmit() {
+    var forms = document.querySelectorAll('form');
+    for (var i = 0; i < forms.length; i++) {
+      forms[i].addEventListener('submit', function(event) {
+        event.preventDefault();
+      });
+    }
+  }
+  window.addEventListener('load', preventFormSubmit);
+
+  function setMessage(msg, isLoading) {
+    var output = document.getElementById('output');
+    output.innerHTML = msg;
+    output.className = isLoading ? 'loading' : 'loaded';
+  }
+
+  function handleFormSubmit(formObject) {
+    console.log('Sending...', formObject);
+
+    setMessage('Importing...', true);
+    google.script.run
+      .withSuccessHandler(function (numImported) { 
+        console.log('Success!');
+        setMessage('Imported ' + numImported + ' contacts');
+      })
+      .withFailureHandler(function(e) {
+        console.error('Error', e);
+        setMessage('Error: ' + e);
+      })
+      .processImportForm(formObject);
+  }
+</script>
+
+
+
+
+  </body>
+</html>

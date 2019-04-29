@@ -1,31 +1,35 @@
 var loadingImg = 'https://lh6.googleusercontent.com/-S87nMBe6KWE/TuB9dR48F0I/AAAAAAAAByQ/0Z96LirzDqg/s27/load.gif';
 
-function selectGroup() {
-    var app = UiApp.createApplication().setWidth('300').setHeight('50').setTitle('Contacts manager');
-    var groups = ContactsApp.getContactGroups();
-    var listBox = app.createListBox().setName('groups').addItem('select...');
-    for (i in groups) {
-        listBox.addItem(groups[i].getName());
-    }
-    var handler = app.createServerChangeHandler('importGroup').addCallbackElement(listBox);
-    var label = app.createLabel('Select the group to import:');
-    var processingImage = app.createImage(loadingImg).setStyleAttribute('paddingLeft', '10px').setVisible(false);
-    var clientHandler = app.createClientHandler().forTargets(label, listBox).setVisible(false).forTargets(processingImage).setVisible(true);
-    listBox.addChangeHandler(handler).addChangeHandler(clientHandler);
-    var panel = app.createVerticalPanel().setId('panel');
-    panel.add(label).add(listBox).add(processingImage);
-    app.add(panel);
-    ss.show(app);
+
+function gmailGetGroups() {
+    return _.map(ContactsApp.getContactGroups(), function (g) {
+        return {
+            name: g.getName()
+        }
+    });
 }
 
-function importGroup(e) {
+function processImportForm(formObject) {
+    return importGroup(formObject.groups);
+}
+
+
+
+function selectGroup() {
+    var html = HtmlService
+      .createTemplateFromFile('ImportContacts');
+  SpreadsheetApp.getUi()
+      .showModalDialog(html.evaluate(), 'Import Contacts');
+}
+
+function importGroup(groups) {
     var headers = createHeaderIfNotFound_('Full Name');
     headers = createHeaderIfNotFound_('First Name');
     headers = createHeaderIfNotFound_('Last Name');
     headers = createHeaderIfNotFound_('Email Address');
     headers = createHeaderIfNotFound_('Company');
     var sheet = ss.getActiveSheet();
-    var group = ContactsApp.getContactGroup(e.parameter.groups);
+    var group = ContactsApp.getContactGroup(groups);
     var contacts = ContactsApp.getContactsByGroup(group);
     var row = sheet.getLastRow() + 1;
     for (i in contacts) {
@@ -43,9 +47,8 @@ function importGroup(e) {
         }
         row++;
     }
-    var app = UiApp.getActiveApplication();
-    var panel = app.getElementById('panel').clear().add(app.createLabel('Done.'));
-    return app;
+
+    return contacts.length;
 }
 
 function createHeaderIfNotFound_(value) {

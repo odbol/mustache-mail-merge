@@ -178,6 +178,12 @@ function merge(kind, selectedTemplate, name, from, cc) {
   cc = cc || selectedTemplate.getCc();
   var bcc = selectedTemplate.getBcc();
 
+  Logger.log("id: " + selectedTemplate.getId());
+  Logger.log(emailTemplate);
+  Logger.log("rawcontent: ");
+  Logger.log(rawContent);
+
+
   var regMessageId = new RegExp(selectedTemplate.getId(), "g");
   if (emailTemplate.match(regMessageId) != null) {
     var inlineImages = {};
@@ -186,8 +192,11 @@ function merge(kind, selectedTemplate, name, from, cc) {
     var imgToReplace = [];
     if(imgVars != null){
       for (var i = 0; i < imgVars.length; i++) {
+        Logger.log("imgVars: " + imgVars[i]);
+
         if (imgVars[i].search(regMessageId) != -1) {
           var id = imgVars[i].match(/realattid=([^&]+)&/);
+          Logger.log("imgVars id: " + id);
           if (id != null) {
             id = id[1];
             var temp = rawContent.split(id)[1];
