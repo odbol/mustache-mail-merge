@@ -5,12 +5,28 @@
 
   <style type="text/css">
 
+body {
+  font: sans-serif;
+}
+
 .section {
-  margin: 1em;
+  margin: 4px;
 }
 
 input, select {
-  margin: 1em;
+  margin: 4px;
+}
+
+#output {
+  color: #119900;
+}
+
+.loaded, .loading {
+  padding-right: 30px;
+  background-image: none;
+}
+.loading {
+  background: url('https://lh6.googleusercontent.com/-S87nMBe6KWE/TuB9dR48F0I/AAAAAAAAByQ/0Z96LirzDqg/s27/load.gif') no-repeat 0 right;
 }
 
   </style>
@@ -54,12 +70,11 @@ input, select {
     </label>
   </div>
 
+  <p id="output" class='loaded'></p>
+
   <input type="submit" value="Send all Mail" />
 </form>
 
-<div id="output">
-  
-</div>
 
 
 
@@ -76,20 +91,23 @@ input, select {
   }
   window.addEventListener('load', preventFormSubmit);
 
-  function setMessage(msg) {
+  function setMessage(msg, isLoading) {
     var output = document.getElementById('output');
     output.innerHTML = msg;
+    output.className = isLoading ? 'loading' : 'loaded';
   }
 
   function handleFormSubmit(formObject) {
     console.log('Sending...', formObject);
-    
-    setMessage('Sending...');
+
+    setMessage('Sending...', true);
     google.script.run
       .withSuccessHandler(function () { 
+        console.log('Success!');
         setMessage('Sent successfully!');
       })
       .withFailureHandler(function(e) {
+        console.error('Error', e);
         setMessage('Error: ' + e);
       })
       .processForm(formObject);

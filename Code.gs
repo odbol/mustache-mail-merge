@@ -8,13 +8,10 @@ function onInstall() {
 function onOpen() {
   ss.addMenu("Mustache Merge", [{
     name: "Standard Merge",
-    functionName: "startingPageforStandardMerge"
+    functionName: "openDialogStandardMerge"
   }, {
     name: "Import contacts",
     functionName: "selectGroup"
-  }, {
-    name: "Test",
-    functionName: "test"
   }]);
   /*,{
     name: "Scheduled mail merge",
@@ -24,7 +21,7 @@ function onOpen() {
 
 
 
-function test() {
+function openDialogStandardMerge() {
   var html = HtmlService
       .createTemplateFromFile('SelectCampaign');
   SpreadsheetApp.getUi()
@@ -79,7 +76,7 @@ function processForm(formObject) {
   UserProperties.setProperty('mustacheChosenName', name);
   UserProperties.setProperty('mustacheGlobalCC', cc);
   
-  merge(kind, selectedTemplate, name, from, cc);
+  merge('gmail', selectedTemplate, name, from, cc);
 
   return true;
 }
