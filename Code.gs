@@ -178,39 +178,47 @@ function merge(kind, selectedTemplate, name, from, cc) {
   cc = cc || selectedTemplate.getCc();
   var bcc = selectedTemplate.getBcc();
 
-  Logger.log("id: " + selectedTemplate.getId());
-  Logger.log(emailTemplate);
-  Logger.log("rawcontent: ");
-  Logger.log(rawContent);
+  //Logger.log("id: " + selectedTemplate.getId());
+
+  //Logger.log(emailTemplate);
+  //Logger.log("rawcontent: ");
+  //Logger.log(rawContent);
+
+  //Logger.log("attachments: ");
+  //Logger.log(attachments);
 
 
   var regMessageId = new RegExp(selectedTemplate.getId(), "g");
-  if (emailTemplate.match(regMessageId) != null) {
+  //if (emailTemplate.match(regMessageId) != null) {
     var inlineImages = {};
-    var nbrOfImg = emailTemplate.match(regMessageId).length;
     var imgVars = emailTemplate.match(/<img[^>]+>/g);
     var imgToReplace = [];
     if(imgVars != null){
       for (var i = 0; i < imgVars.length; i++) {
-        Logger.log("imgVars: " + imgVars[i]);
+        //Logger.log("imgVars: " + imgVars[i]);
 
-        if (imgVars[i].search(regMessageId) != -1) {
-          var id = imgVars[i].match(/realattid=([^&]+)&/);
-          Logger.log("imgVars id: " + id);
+        //if (imgVars[i].search(regMessageId) != -1) {
+          var id = imgVars[i].match(/cid:([^&"]+)[&"]/);
+          //Logger.log("imgVars id: " + id);
           if (id != null) {
             id = id[1];
             var temp = rawContent.split(id)[1];
             temp = temp.substr(temp.lastIndexOf('Content-Type'));
-            var imgTitle = temp.match(/name="([^"]+)"/);
+            var imgTitle = imgVars[i].match(/alt="([^"]+)"/);
+            if (imgTitle) {
+              imgTitle = imgTitle[1];
+            }
             var contentType = temp.match(/Content-Type: ([^;]+);/);
             contentType = (contentType != null) ? contentType[1] : "image/jpeg";
             var b64c1 = rawContent.lastIndexOf(id) + id.length + 3; // first character in image base64
             var b64cn = rawContent.substr(b64c1).indexOf("--") - 3; // last character in image base64
             var imgb64 = rawContent.substring(b64c1, b64c1 + b64cn + 1); // is this fragile or safe enough?
             var imgblob = Utilities.newBlob(Utilities.base64Decode(imgb64), contentType, id); // decode and blob
-            if (imgTitle != null) imgToReplace.push([imgTitle[1], imgVars[i], id, imgblob]);
+            imgToReplace.push([imgTitle, imgVars[i], id, imgblob]);
+
+            //Logger.log("imgToReplace: " + imgTitle + " : " + imgVars[i] + " : " + id);
           }
-        }
+        //}
       }
     }
     for (var i = 0; i < imgToReplace.length; i++) {
@@ -218,7 +226,7 @@ function merge(kind, selectedTemplate, name, from, cc) {
       var newImg = imgToReplace[i][1].replace(/src="[^\"]+\"/, "src=\"cid:" + imgToReplace[i][2] + "\"");
       emailTemplate = emailTemplate.replace(imgToReplace[i][1], newImg);
     }
-  }
+  //}
   //////////////////////////////////////////////////////////////////////////////
   var mergeData = {
     template: emailTemplate,
@@ -272,7 +280,7 @@ var mustacheTemplate = null;
 // Returns a string without markers. If no data is found to replace a marker, it is
 // simply removed.
 function fillInTemplateFromObject(template, data) {
-  //Logger.log('got template: ' + template);
+  ////Logger.log('got template: ' + template);
   
   var  normalizedData = {},
        result;
@@ -282,8 +290,8 @@ function fillInTemplateFromObject(template, data) {
   });
   result = Mustache.render(template, normalizedData);
   
-  //Logger.log('rendered: ' + result);
-  //Logger.log('rendered with vars: ' + _.keys(normalizedData).join(',') + _.values(normalizedData).join(','));  
+  ////Logger.log('rendered: ' + result);
+  ////Logger.log('rendered with vars: ' + _.keys(normalizedData).join(',') + _.values(normalizedData).join(','));  
   return result;
   
   
