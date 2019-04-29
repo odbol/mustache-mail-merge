@@ -12,6 +12,9 @@ function onOpen() {
   }, {
     name: "Import contacts",
     functionName: "selectGroup"
+  }, {
+    name: "Test",
+    functionName: "test"
   }]);
   /*,{
     name: "Scheduled mail merge",
@@ -19,28 +22,91 @@ function onOpen() {
   }*/
 }
 
-function selectDraftInGmail_(app, scheduled) {
-  var mainPanel = app.getElementById('mainPanel');
-  var processingLabel = app.createLabel('Processing').setStyleAttribute('marginTop', '50px').setVisible(false);
-  var processingImage = app.createImage(loadingImg).setVisible(false);
 
-  var parametersPanel = app.createVerticalPanel().setWidth(370).setSpacing(10);
-  var chosenTemplatePanel = app.createHorizontalPanel();
-  var chosenTemplate = app.createTextBox().setName('chosenTemplate').setVisible(false);
-  var showChosenTemplate = app.createLabel('none').setStyleAttribute('marginLeft', '10px');
-  chosenTemplatePanel.add(app.createLabel('Selected template: ')).add(chosenTemplate).add(showChosenTemplate);
-  parametersPanel.add(chosenTemplatePanel);
+
+function test() {
+  var html = HtmlService
+      .createTemplateFromFile('SelectCampaign');
+  SpreadsheetApp.getUi()
+      .showModalDialog(html.evaluate(), 'Mail Merge');
+}
+
+function gmailGetAliases() {
+  var userEmail = Session.getEffectiveUser().getEmail();
+  var chosenFrom = [userEmail];
   var aliases = GmailApp.getAliases();
   if(aliases != null && aliases.length > 0){
-    var chosenFromPanel = app.createHorizontalPanel().setVerticalAlignment(UiApp.VerticalAlignment.MIDDLE).setSpacing(10);
-    var chosenFrom = app.createListBox().setName('chosenFrom').setWidth(200).addItem(Session.getEffectiveUser().getEmail());
-    for(i in aliases) chosenFrom.addItem(aliases[i]);
-    chosenFromPanel.add(app.createLabel('Send from: ')).add(chosenFrom);
-    parametersPanel.add(chosenFromPanel);
+    // var chosenFromPanel = app.createHorizontalPanel().setVerticalAlignment(UiApp.VerticalAlignment.MIDDLE).setSpacing(10);
+    //app.createListBox().setName('chosenFrom').setWidth(200).addItem(userEmail);
+    for(i in aliases) chosenFrom.push(aliases[i]);
+    // chosenFromPanel.add(app.createLabel('Send from: ')).add(chosenFrom);
+    // parametersPanel.add(chosenFromPanel);
+    console.log('aliases: ', aliases);
   }
-  else {
-    parametersPanel.add(app.createHidden('chosenFrom', Session.getEffectiveUser().getEmail()));
-  }
+
+  return aliases;
+}
+
+
+
+function gmailGetDrafts() {
+  var templates = GmailApp.search("in:drafts");
+  return _.map(templates, function (template) {
+    return {
+      subject: template.getFirstMessageSubject(),
+      id: template.getId()
+    };
+  })
+  .filter(function(t) { return t.subject; });
+}
+
+function gmailGetFromName() {
+  return UserProperties.getProperty('mustacheChosenName') || Session.getEffectiveUser().getEmail();
+}
+
+function gmailGetGlobalCC() {
+  return UserProperties.getProperty('mustacheGlobalCC');
+}
+
+function processForm(formObject) {
+  var selectedTemplate = GmailApp.getThreadById(formObject.chosenTemplate).getMessages()[0];
+  var user = Session.getEffectiveUser().getEmail();
+  var name = formObject.chosenName;
+  var from = formObject.chosenFrom;
+  var cc = formObject.ccAddr;
+  
+  // save choices for multiple runnings
+  UserProperties.setProperty('mustacheChosenName', name);
+  UserProperties.setProperty('mustacheGlobalCC', cc);
+  
+  merge(kind, selectedTemplate, name, from, cc);
+
+  return true;
+}
+
+
+
+
+
+
+
+
+
+
+function selectDraftInGmail_(app, scheduled) {
+  // var mainPanel = app.getElementById('mainPanel');
+  // var processingLabel = app.createLabel('Processing').setStyleAttribute('marginTop', '50px').setVisible(false);
+  // var processingImage = app.createImage(loadingImg).setVisible(false);
+
+  // var parametersPanel = app.createVerticalPanel().setWidth(370).setSpacing(10);
+  // var chosenTemplatePanel = app.createHorizontalPanel();
+  // var chosenTemplate = app.createTextBox().setName('chosenTemplate').setVisible(false);
+  // var showChosenTemplate = app.createLabel('none').setStyleAttribute('marginLeft', '10px');
+  // chosenTemplatePanel.add(app.createLabel('Selected template: ')).add(chosenTemplate).add(showChosenTemplate);
+  // parametersPanel.add(chosenTemplatePanel);
+
+  // TODO: select box chosenFrom
+
   var chosenNamePanel = app.createHorizontalPanel().setVerticalAlignment(UiApp.VerticalAlignment.MIDDLE).setSpacing(10);
   var savedName = UserProperties.getProperty('mustacheChosenName') || Session.getEffectiveUser().getEmail();
   var chosenName = app.createTextBox().setName('chosenName').setWidth(200).setText(savedName);

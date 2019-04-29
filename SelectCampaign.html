@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+
+  <style type="text/css">
+
+.section {
+  margin: 1em;
+}
+
+input, select {
+  margin: 1em;
+}
+
+  </style>
+
+  </head>
+  <body>
+
+<form id="myForm" onsubmit="handleFormSubmit(this)">
+
+  <div class='section'>
+    <label>From address:
+      <? var aliases = gmailGetAliases(); ?>
+      <select name="chosenFrom">
+        <? for (var i = 0; i < aliases.length; i++) { ?>
+            <option value="<?=aliases[i] ?>"><?= aliases[i] ?></option>
+        <? } ?>
+      </select>
+    </label>
+  </div>
+
+  <div class='section'>
+    <label>From name:
+      <input name="chosenName" type="text" value="<?= gmailGetFromName() ?>" />
+    </label>
+  </div>
+
+  <div class='section'>
+    <label>CC:
+      <input name="ccAddr" type="text" value="<?= gmailGetGlobalCC() ?>" />
+    </label>
+  </div>
+
+  <div class='section'>
+    <label>Template draft email:
+      <? var drafts = gmailGetDrafts(); ?>
+      <select name="chosenTemplate">
+        <? for (var i = 0; i < Math.min(drafts.length, 8); i++) { ?>
+            <option value="<?=drafts[i].id ?>"><?= drafts[i].subject ?></option>
+        <? } ?>
+      </select>
+    </label>
+  </div>
+
+  <input type="submit" value="Send all Mail" />
+</form>
+
+<div id="output">
+  
+</div>
+
+
+
+<script>
+
+  // Prevent forms from submitting.
+  function preventFormSubmit() {
+    var forms = document.querySelectorAll('form');
+    for (var i = 0; i < forms.length; i++) {
+      forms[i].addEventListener('submit', function(event) {
+        event.preventDefault();
+      });
+    }
+  }
+  window.addEventListener('load', preventFormSubmit);
+
+  function setMessage(msg) {
+    var output = document.getElementById('output');
+    output.innerHTML = msg;
+  }
+
+  function handleFormSubmit(formObject) {
+    console.log('Sending...', formObject);
+    
+    setMessage('Sending...');
+    google.script.run
+      .withSuccessHandler(function () { 
+        setMessage('Sent successfully!');
+      })
+      .withFailureHandler(function(e) {
+        setMessage('Error: ' + e);
+      })
+      .processForm(formObject);
+  }
+</script>
+
+
+
+
+  </body>
+</html>
